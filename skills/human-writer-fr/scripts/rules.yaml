@@ -1,0 +1,277 @@
+# FR notes:
+# - Apostrophes in YAML phrases use straight ' (U+0027). The analyzer wraps each
+#   phrase with re.escape + \b...\b. If input text uses curly ’ (U+2019), it
+#   will NOT match a straight-apostrophe vocabulary pattern. For ai_constructions,
+#   we use a class ['’] to match both. For suspect_vocabulary, we accept this
+#   limitation — most LLM-generated plain text uses straight apostrophes.
+# - Suspect vocabulary covers Tier 1 + Tier 2 (~150 entries). Tier 3 is
+#   documented in references/tells-stylistic-fr.md but excluded here:
+#   false-positive risk on common words is too high for a per-word matcher.
+# - min_accent_ratio is the NEW French typography threshold: the FLOOR for the
+#   ratio of accented French characters (é è ê ë à â ä î ï ô ö ù û ü ÿ ç œ æ,
+#   both cases) to total letters. Native French prose sits around 0.033–0.039
+#   (measured on the calibration fixtures); a value far below this floor means
+#   the accents were stripped (a frequent AI/plain-text failure mode that reads
+#   as broken French on sight). The detector also requires ≥ 40 words before it
+#   can flag, so short accent-sparse snippets don't false-fire. Calibrated well
+#   below the clean-prose floor (0.012) so native French never trips it. Ported
+#   from the human-writer-pt accent hard-check.
+# - burstiness_min and comma_density_max are copied verbatim from the master
+#   thresholds block; they are currently UNREAD by analyze.py (vestigial). Keep
+#   them; do not treat their presence as a bug.
+fr:
+  suspect_vocabulary:
+    # --- Tier 1: high signal ---
+    # Connectors and meta-comments
+    - "en effet"
+    - "il convient de"
+    - "il convient de noter"
+    - "il convient de souligner"
+    - "il convient de rappeler"
+    - "il convient de préciser"
+    - "rappelons que"
+    - "soulignons que"
+    - "précisons que"
+    - "notons que"
+    - "force est de constater"
+    - "force est d'admettre"
+    - "il s'agit là de"
+    - "il s'agit de"
+    - "à savoir que"
+    - "ce qui n'est pas sans rappeler"
+    - "c'est dans ce contexte que"
+    - "dans cette perspective"
+    - "dans cette optique"
+    - "à cet égard"
+    - "il n'est pas anodin de"
+    - "il n'est pas exagéré de dire"
+    - "il ne fait aucun doute que"
+    - "nul ne saurait contester"
+    - "comme chacun sait"
+    - "comme nul ne l'ignore"
+    # Adverbs of certainty
+    - "résolument"
+    - "pleinement"
+    - "fondamentalement"
+    - "indéniablement"
+    - "assurément"
+    - "manifestement"
+    - "incontestablement"
+    - "indubitablement"
+    - "à n'en pas douter"
+    # Spatial/temporal abstractions
+    - "dans un monde où"
+    - "dans un univers où"
+    - "à l'ère du numérique"
+    - "à l'ère de l'IA"
+    - "à l'heure où"
+    - "aux quatre coins du"
+    - "au cœur de"
+    - "au sein de"
+    - "au-delà de"
+    - "par-delà"
+    - "à mille lieues de"
+    - "à des années-lumière"
+    # Comparators
+    - "à l'instar de"
+    - "à l'image de"
+    - "à l'aune de"
+    - "à la lumière de"
+    - "au regard de"
+    - "compte tenu de"
+    - "eu égard à"
+    # Metaphorical inflators
+    - "véritable"
+    - "incontournable"
+    - "phare"
+    - "emblématique"
+    - "iconique"
+    - "révolutionnaire"
+    - "transformatif"
+    - "robuste"
+    - "actionnable"
+    - "à la croisée des chemins"
+    # Structural metaphors
+    - "le maillon essentiel"
+    - "la pierre angulaire"
+    - "le fil conducteur"
+    - "l'épine dorsale"
+    - "le socle"
+    - "la clé de voûte"
+    # Verbs and verbal phrases
+    - "tirer parti de"
+    - "mettre à profit"
+    - "exploiter pleinement"
+    - "déployer"
+    - "ériger"
+    - "instaurer"
+    - "consacrer"
+    - "imprégner"
+    - "irriguer"
+    - "insuffler"
+    - "incarner"
+    - "cristalliser"
+    - "catalyser"
+    - "fédérer"
+    - "transcender"
+    - "embrasser"
+    - "plonger au cœur de"
+    - "libérer le potentiel"
+
+    # --- Tier 2: medium signal ---
+    # Verbs
+    - "naviguer dans"
+    - "explorer"
+    - "découvrir"
+    - "dévoiler"
+    - "révolutionner"
+    - "transformer"
+    - "optimiser"
+    - "rationaliser"
+    - "fluidifier"
+    - "favoriser"
+    - "encourager"
+    - "stimuler"
+    - "valoriser"
+    - "magnifier"
+    - "sublimer"
+    - "accompagner"
+    - "délivrer"
+    - "adresser"
+    - "supporter"
+    - "impacter"
+    - "initier"
+    - "investiguer"
+    - "monitorer"
+    - "implémenter"
+    - "challenger"
+    - "pivoter"
+    # Adjectives of importance
+    - "essentiel"
+    - "fondamental"
+    - "primordial"
+    - "crucial"
+    - "déterminant"
+    - "décisif"
+    - "capital"
+    # Adjectives of intensity
+    - "remarquable"
+    - "exceptionnel"
+    - "extraordinaire"
+    - "spectaculaire"
+    - "saisissant"
+    - "majestueux"
+    - "somptueux"
+    - "impressionnant"
+    - "raffinement"
+    - "élégance"
+    - "sophistication"
+    # Abstract nouns
+    - "harmonie"
+    - "équilibre"
+    - "symbiose"
+    - "synergie"
+    - "écosystème"
+    - "univers"
+    - "monde de"
+    # Vague abstractions
+    - "expérience"
+    - "immersion"
+    - "voyage"
+    - "parcours"
+    - "découverte"
+    - "aventure"
+    - "épopée"
+    - "panorama"
+    - "paysage"
+    - "horizon"
+    - "une multitude de"
+    - "un large éventail de"
+    - "offrir une expérience"
+    # Connectors (overuse)
+    - "d'ailleurs"
+    - "par ailleurs"
+    - "en outre"
+    - "de plus"
+    - "par conséquent"
+    - "de ce fait"
+  ai_constructions:
+    # --- High severity (banned outright) ---
+    - pattern: "Il ne s['’]agit pas seulement de"
+      severity: high
+    - pattern: "Plongeons au cœur de"
+      severity: high
+    - pattern: "Explorons ensemble"
+      severity: high
+    - pattern: "Dans un monde où"
+      severity: high
+    - pattern: "À l['’]ère de l['’]IA"
+      severity: high
+    - pattern: "À l['’]heure où"
+      severity: high
+    - pattern: "Imaginez un monde où"
+      severity: high
+    - pattern: "Et si je vous disais que"
+      severity: high
+    - pattern: "Force est de constater"
+      severity: high
+    - pattern: "Au final,"
+      severity: high
+    # --- Medium severity (rare-only) ---
+    - pattern: "Que vous soyez .*? ou"
+      severity: medium
+    - pattern: "Accrochez-vous, car"
+      severity: medium
+    - pattern: "Décortiquons cela"
+      severity: medium
+    - pattern: "Voici ce qu['’]il en est"
+      severity: medium
+    - pattern: "Disons-le clairement"
+      severity: medium
+    - pattern: "Pour faire court,"
+      severity: medium
+    - pattern: "Vous vous demandez peut-être"
+      severity: medium
+    - pattern: "Le constat est sans appel"
+      severity: medium
+    - pattern: "En conclusion,"
+      severity: medium
+    - pattern: "Pour conclure,"
+      severity: medium
+    - pattern: "En définitive,"
+      severity: medium
+    # --- Low severity (flag only at high frequency) ---
+    - pattern: "Finalement,"
+      severity: low
+    - pattern: "Au bout du compte,"
+      severity: low
+    - pattern: "Tout compte fait,"
+      severity: low
+    - pattern: "À l['’]arrivée,"
+      severity: low
+  thresholds:
+    # FR: the em-dash "—" reads as an even stronger AI tell than in EN
+    # (French prose rarely uses it). Target 0; convert to comma/colon/period.
+    em_dash_per_1000_words: 1.0
+    # FR accent-stripping floor: native French prose carries accents at a ratio
+    # of ~0.033–0.039 (measured). Below this floor (with ≥40 words) the prose has
+    # been de-accented — a broken-French AI/plain-text signature. Calibrated well
+    # under the clean-prose floor so native French never trips it.
+    min_accent_ratio: 0.012
+    burstiness_min: 8.0
+    sentence_stdev_min: 8.0
+    lexical_diversity_min: 0.45
+    comma_density_max: 2.0
+    bullet_parallelism_max: 0.80
+
+content_type_weights:
+  marketing:     {statistical: 1.0, stylistic: 1.0, structural: 1.0}
+  short-comms:   {statistical: 0.6, stylistic: 1.2, structural: 0.5}
+  technical:     {statistical: 0.5, stylistic: 0.7, structural: 0.3}
+  editorial-seo: {statistical: 0.9, stylistic: 1.0, structural: 1.0}
+
+verdict_bands:
+  LOW_RISK: [0, 24]
+  MEDIUM_RISK: [25, 49]
+  HIGH_RISK: [50, 74]
+  CRITICAL: [75, 100]
